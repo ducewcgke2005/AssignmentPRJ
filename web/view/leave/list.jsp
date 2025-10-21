@@ -145,7 +145,6 @@
         <th>Reason</th>
         <th>Status</th>
         <th>Processed By</th>
-        <th>Action</th>
     </tr>
     <% if (list != null && !list.isEmpty()) { 
         for (LeaveRequest r : list) { %>
@@ -165,13 +164,6 @@
                 <% } %>
             </td>
             <td><%=r.getProcessedBy() != null ? r.getProcessedBy().getName() : "-" %></td>
-            <td>
-                <% if (canViewSubordinates) { %>
-                    <a href="<%=request.getContextPath()%>/request/review?id=<%=r.getId()%>">Review</a>
-                <% } else { %>
-                    -
-                <% } %>
-            </td>
         </tr>
     <% } } else { %>
         <tr><td colspan="8">No requests found.</td></tr>
