@@ -4,8 +4,8 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import model.leave.LeaveRequest;
 import model.Employee;
+import model.LeaveRequest;
 
 public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
 
@@ -15,13 +15,16 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
         try {
             String sql = """
                 SELECT r.rid, r.created_by, r.created_time, r.[from], r.[to], 
-                       r.reason, r.status,
-                       e.eid, e.ename
+                       r.reason, r.status, r.processed_by,
+                       e.eid AS created_eid, e.ename AS created_ename,
+                       p.eid AS processed_eid, p.ename AS processed_ename
                 FROM RequestForLeave r
                 INNER JOIN Employee e ON r.created_by = e.eid
+                LEFT JOIN Employee p ON r.processed_by = p.eid
             """;
             PreparedStatement stm = connection.prepareStatement(sql);
             ResultSet rs = stm.executeQuery();
+
             while (rs.next()) {
                 LeaveRequest lr = new LeaveRequest();
                 lr.setId(rs.getInt("rid"));
@@ -31,10 +34,20 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
                 lr.setFromDate(rs.getDate("from"));
                 lr.setToDate(rs.getDate("to"));
 
-                Employee e = new Employee();
-                e.setId(rs.getInt("eid"));
-                e.setName(rs.getString("ename"));
-                lr.setCreatedBy(e);
+                // Thông tin người tạo đơn
+                Employee creator = new Employee();
+                creator.setId(rs.getInt("created_eid"));
+                creator.setName(rs.getString("created_ename"));
+                lr.setCreatedBy(creator);
+
+                // Thông tin người duyệt (nếu có)
+                int processedId = rs.getInt("processed_by");
+                if (!rs.wasNull()) {
+                    Employee processor = new Employee();
+                    processor.setId(processedId);
+                    processor.setName(rs.getString("processed_ename"));
+                    lr.setProcessedBy(processor);
+                }
 
                 list.add(lr);
             }
@@ -51,15 +64,18 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
         try {
             String sql = """
                 SELECT r.rid, r.created_by, r.created_time, r.[from], r.[to],
-                       r.reason, r.status,
-                       e.eid, e.ename
+                       r.reason, r.status, r.processed_by,
+                       e.eid AS created_eid, e.ename AS created_ename,
+                       p.eid AS processed_eid, p.ename AS processed_ename
                 FROM RequestForLeave r
                 INNER JOIN Employee e ON r.created_by = e.eid
+                LEFT JOIN Employee p ON r.processed_by = p.eid
                 WHERE r.rid = ?
             """;
             PreparedStatement stm = connection.prepareStatement(sql);
             stm.setInt(1, id);
             ResultSet rs = stm.executeQuery();
+
             if (rs.next()) {
                 LeaveRequest lr = new LeaveRequest();
                 lr.setId(rs.getInt("rid"));
@@ -69,10 +85,19 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
                 lr.setFromDate(rs.getDate("from"));
                 lr.setToDate(rs.getDate("to"));
 
-                Employee e = new Employee();
-                e.setId(rs.getInt("eid"));
-                e.setName(rs.getString("ename"));
-                lr.setCreatedBy(e);
+                Employee creator = new Employee();
+                creator.setId(rs.getInt("created_eid"));
+                creator.setName(rs.getString("created_ename"));
+                lr.setCreatedBy(creator);
+
+                int processedId = rs.getInt("processed_by");
+                if (!rs.wasNull()) {
+                    Employee processor = new Employee();
+                    processor.setId(processedId);
+                    processor.setName(rs.getString("processed_ename"));
+                    lr.setProcessedBy(processor);
+                }
+
                 return lr;
             }
         } catch (SQLException ex) {
@@ -88,8 +113,8 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
         try {
             String sql = """
                 INSERT INTO RequestForLeave
-                ([created_by], [created_time], [from], [to], [reason], [status])
-                VALUES (?, GETDATE(), ?, ?, ?, ?)
+                ([created_by], [created_time], [from], [to], [reason], [status], [processed_by])
+                VALUES (?, GETDATE(), ?, ?, ?, ?, NULL)
             """;
             PreparedStatement stm = connection.prepareStatement(sql);
             stm.setInt(1, model.getCreatedBy().getId());
@@ -110,7 +135,7 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
         try {
             String sql = """
                 UPDATE RequestForLeave
-                SET [from] = ?, [to] = ?, [reason] = ?, [status] = ?
+                SET [from] = ?, [to] = ?, [reason] = ?, [status] = ?, [processed_by] = ?
                 WHERE rid = ?
             """;
             PreparedStatement stm = connection.prepareStatement(sql);
@@ -118,7 +143,11 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
             stm.setDate(2, new java.sql.Date(model.getToDate().getTime()));
             stm.setString(3, model.getReason());
             stm.setInt(4, model.getStatus());
-            stm.setInt(5, model.getId());
+            if (model.getProcessedBy() != null)
+                stm.setInt(5, model.getProcessedBy().getId());
+            else
+                stm.setNull(5, Types.INTEGER);
+            stm.setInt(6, model.getId());
             stm.executeUpdate();
         } catch (SQLException ex) {
             Logger.getLogger(LeaveRequestDBContext.class.getName()).log(Level.SEVERE, null, ex);
