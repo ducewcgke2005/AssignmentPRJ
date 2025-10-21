@@ -18,7 +18,8 @@ public class UserDBContext extends DBContext<User> {
                     u.username,
                     u.displayname,
                     e.eid,
-                    e.ename
+                    e.ename,
+                    e.supervisorid
                 FROM [User] u
                 INNER JOIN [Enrollment] en ON u.[uid] = en.[uid]
                 INNER JOIN [Employee] e ON e.eid = en.eid
@@ -32,19 +33,28 @@ public class UserDBContext extends DBContext<User> {
             ResultSet rs = stm.executeQuery();
 
             if (rs.next()) {
-                // Tạo User
+                // 🧩 Tạo đối tượng User
                 User u = new User();
                 u.setId(rs.getInt("uid"));
                 u.setUsername(rs.getString("username"));
                 u.setDisplayname(rs.getString("displayname"));
 
-                // Tạo Employee
+                // 🧩 Tạo đối tượng Employee
                 Employee e = new Employee();
                 e.setId(rs.getInt("eid"));
                 e.setName(rs.getString("ename"));
+
+                // ⚙️ Nếu có supervisor thì set vào
+                int supervisorId = rs.getInt("supervisorid");
+                if (!rs.wasNull()) { // tránh lỗi khi null
+                    Employee sup = new Employee();
+                    sup.setId(supervisorId);
+                    e.setSupervisor(sup);
+                }
+
                 u.setEmployee(e);
 
-                // 🔹 Gọi RoleDBContext để lấy đầy đủ roles + features
+                // 🧩 Lấy Role + Feature
                 RoleDBContext roleDB = new RoleDBContext();
                 ArrayList<Role> roles = roleDB.getByUserId(u.getId());
                 u.setRoles(roles);
