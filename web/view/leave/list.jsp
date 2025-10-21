@@ -1,10 +1,38 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.ArrayList" %>
 <%@ page import="model.LeaveRequest" %>
+<%@ page import="model.iam.User" %>
+<%@ page import="model.iam.Role" %>
 <%
+    // Lấy user đăng nhập
+    User user = (User) session.getAttribute("auth");
+    if (user == null) {
+        response.sendRedirect(request.getContextPath() + "/view/auth/login.jsp");
+        return;
+    }
+
     ArrayList<LeaveRequest> list = (ArrayList<LeaveRequest>) request.getAttribute("requests");
     String viewType = (String) request.getAttribute("viewType");
+
+
+    String roleName = user.getRoles() != null && !user.getRoles().isEmpty()
+            ? user.getRoles().get(0).getName()
+            : "Employee";
+
+    // Xác định dashboard URL tương ứng với role
+    String dashboardUrl = request.getContextPath() + "/home";
+    if (roleName.equalsIgnoreCase("IT Head")) {
+        dashboardUrl = request.getContextPath() + "/view/dashboard/head.jsp";
+    } else if (roleName.equalsIgnoreCase("IT PM") || roleName.equalsIgnoreCase("Head")) {
+        dashboardUrl = request.getContextPath() + "/view/dashboard/pmdash.jsp";
+    } else {
+        dashboardUrl = request.getContextPath() + "/view/dashboard/employeedash.jsp";
+    }
+
+    // Kiểm tra quyền: chỉ Manager hoặc Head mới được xem cấp dưới
+    boolean canViewSubordinates = roleName.equalsIgnoreCase("IT Head") || roleName.equalsIgnoreCase("IT PM") || roleName.equalsIgnoreCase("DivisionHead");
 %>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -18,9 +46,25 @@
             margin: 0;
             padding: 40px;
         }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
         h2 {
-            text-align: center;
             color: #2c3e50;
+            margin: 0;
+        }
+        a.back {
+            text-decoration: none;
+            background-color: #3498db;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 6px;
+        }
+        a.back:hover {
+            background-color: #217dbb;
         }
         form {
             text-align: center;
@@ -64,60 +108,73 @@
         tr:hover {
             background-color: #eaf2ff;
         }
-        a {
-            text-decoration: none;
-            color: #2980b9;
-            font-weight: bold;
-        }
-        a:hover {
-            color: #1a5276;
-        }
         td:last-child a {
             background-color: #3498db;
             color: white;
             padding: 5px 10px;
             border-radius: 5px;
+            text-decoration: none;
         }
         td:last-child a:hover {
             background-color: #217dbb;
         }
-        .status-pending {
-            color: #f39c12;
-            font-weight: bold;
-        }
-        .status-approved {
-            color: #27ae60;
-            font-weight: bold;
-        }
-        .status-rejected {
-            color: #e74c3c;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
-<h2>Leave Requests</h2>
+<div class="top-bar">
+    <h2>Leave Requests</h2>
+    <a href="<%= dashboardUrl %>" class="back">← Back to Dashboard</a>
+</div>
+
 <form method="get" action="<%=request.getContextPath()%>/request/list">
     <label>View:</label>
     <select name="view" onchange="this.form.submit()">
         <option value="mine" <%= "mine".equals(viewType)?"selected":"" %>>My Requests</option>
-        <option value="subordinates" <%= "subordinates".equals(viewType)?"selected":"" %>>Subordinates' Requests</option>
+        <% if (canViewSubordinates) { %>
+            <option value="subordinates" <%= "subordinates".equals(viewType)?"selected":"" %>>Subordinates' Requests</option>
+        <% } %>
     </select>
 </form>
-<br>
-<table border="1" cellpadding="6" cellspacing="0">
-    <tr><th>ID</th><th>Employee</th><th>From</th><th>To</th><th>Reason</th><th>Status</th><th>Processed By</th><th>Action</th></tr>
-    <% for(LeaveRequest r : list) { %>
+
+<table>
     <tr>
-        <td><%=r.getId()%></td>
-        <td><%=r.getCreatedBy().getName()%></td>
-        <td><%=r.getFromDate()%></td>
-        <td><%=r.getToDate()%></td>
-        <td><%=r.getReason()%></td>
-        <td><%=r.getStatus()==0?"Pending":r.getStatus()==1?"Approved":"Rejected"%></td>
-        <td><%=r.getProcessedBy()!=null?r.getProcessedBy().getName():"-"%></td>
-        <td><a href="<%=request.getContextPath()%>/request/review?id=<%=r.getId()%>">Review</a></td>
+        <th>ID</th>
+        <th>Employee</th>
+        <th>From</th>
+        <th>To</th>
+        <th>Reason</th>
+        <th>Status</th>
+        <th>Processed By</th>
+        <th>Action</th>
     </tr>
+    <% if (list != null && !list.isEmpty()) { 
+        for (LeaveRequest r : list) { %>
+        <tr>
+            <td><%=r.getId()%></td>
+            <td><%=r.getCreatedBy().getName()%></td>
+            <td><%=r.getFromDate()%></td>
+            <td><%=r.getToDate()%></td>
+            <td><%=r.getReason()%></td>
+            <td>
+                <% if (r.getStatus() == 0) { %>
+                    <span class="status-pending">Pending</span>
+                <% } else if (r.getStatus() == 1) { %>
+                    <span class="status-approved">Approved</span>
+                <% } else { %>
+                    <span class="status-rejected">Rejected</span>
+                <% } %>
+            </td>
+            <td><%=r.getProcessedBy() != null ? r.getProcessedBy().getName() : "-" %></td>
+            <td>
+                <% if (canViewSubordinates) { %>
+                    <a href="<%=request.getContextPath()%>/request/review?id=<%=r.getId()%>">Review</a>
+                <% } else { %>
+                    -
+                <% } %>
+            </td>
+        </tr>
+    <% } } else { %>
+        <tr><td colspan="8">No requests found.</td></tr>
     <% } %>
 </table>
 </body>
