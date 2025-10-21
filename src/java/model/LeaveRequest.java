@@ -1,29 +1,17 @@
-package model.leave;
+
+package model;
 
 import java.util.Date;
-import model.BaseModel;
-import model.Employee;
 
 public class LeaveRequest extends BaseModel {
-    private Employee createdBy;
-    private Date createdTime;
-    private Date fromDate;
-    private Date toDate;
-    private String reason;
-    private int status; // 0 = Inprogress, 1 = Approved, 2 = Rejected
+    private Employee createdBy;    
+    private Date createdTime;      
+    private Date fromDate;       
+    private Date toDate;         
+    private String reason;         
+    private int status;             
+    private Employee processedBy;   
 
-    public LeaveRequest() {
-    }
-
-    public LeaveRequest(int id, Employee createdBy, Date createdTime, Date fromDate, Date toDate, String reason, int status) {
-        super.setId(id);
-        this.createdBy = createdBy;
-        this.createdTime = createdTime;
-        this.fromDate = fromDate;
-        this.toDate = toDate;
-        this.reason = reason;
-        this.status = status;
-    }
 
     public Employee getCreatedBy() {
         return createdBy;
@@ -71,5 +59,13 @@ public class LeaveRequest extends BaseModel {
 
     public void setStatus(int status) {
         this.status = status;
+    }
+
+    public Employee getProcessedBy() {
+        return processedBy;
+    }
+
+    public void setProcessedBy(Employee processedBy) {
+        this.processedBy = processedBy;
     }
 }
