@@ -78,7 +78,7 @@
 
     <ul>
         <li><a href="<%= request.getContextPath() %>/request/create">➕ Create Leave Request</a></li>
-        <li><a href="<%= request.getContextPath() %>/leave/list">📋 View All Leave Requests</a></li>
+        <li><a href="<%= request.getContextPath() %>/request/list">📋 View All Leave Requests</a></li>
         <li><a href="<%= request.getContextPath() %>/request/review">✅ Approve / Reject Requests</a></li>
         <li><a href="<%= request.getContextPath() %>/logout" class="logout">🚪 Logout</a></li>
     </ul>

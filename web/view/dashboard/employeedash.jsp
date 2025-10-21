@@ -73,7 +73,7 @@
 
     <div class="links">
         <a href="<%= request.getContextPath() %>/request/create">Create Leave Request</a>
-        <a href="<%= request.getContextPath() %>/leave/list">View Leave Requests</a>
+        <a href="<%= request.getContextPath() %>/request/list">View Leave Requests</a>
         <br><br>
         <a href="<%= request.getContextPath() %>/logout" class="logout">Logout</a>
     </div>
