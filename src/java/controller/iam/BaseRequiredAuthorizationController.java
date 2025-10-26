@@ -13,7 +13,6 @@ import model.iam.Feature;
 import model.iam.Role;
 import model.iam.User;
 
-
 public abstract class BaseRequiredAuthorizationController extends BaseRequiredAuthenticationController {
 
     private boolean isAuthorized(HttpServletRequest req, User user) {
@@ -26,29 +25,34 @@ public abstract class BaseRequiredAuthorizationController extends BaseRequiredAu
         String url = req.getServletPath();
         for (Role role : user.getRoles()) {
             for (Feature feature : role.getFeatures()) {
-                if(feature.getUrl().equals(url))
+                if (feature.getUrl().equals(url)) {
                     return true;
+                }
             }
         }
         return false;
     }
 
     protected abstract void processPost(HttpServletRequest req, HttpServletResponse resp, User user) throws ServletException, IOException;
-    protected abstract void processGet(HttpServletRequest req, HttpServletResponse resp, User user) throws ServletException, IOException ;
+
+    protected abstract void processGet(HttpServletRequest req, HttpServletResponse resp, User user) throws ServletException, IOException;
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp, User user) throws ServletException, IOException {
-        if(isAuthorized(req, user))
+        if (isAuthorized(req, user)) {
             processPost(req, resp, user);
-        else
-            resp.getWriter().println("access denied!");
+        } else {
+            req.getRequestDispatcher("/view/accessDeniedAuth.jsp").forward(req, resp);
+        }
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp, User user) throws ServletException, IOException {
-        if(isAuthorized(req, user))
+        if (isAuthorized(req, user)) {
             processGet(req, resp, user);
-        else
-            resp.getWriter().println("access denied!");
+        } else {
+            req.getRequestDispatcher("/view/accessDeniedAuth.jsp").forward(req, resp);
+        }
     }
 
 }

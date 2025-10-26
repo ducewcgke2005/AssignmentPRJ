@@ -16,31 +16,34 @@ import model.iam.User;
  * @author sonnt
  */
 public abstract class BaseRequiredAuthenticationController extends HttpServlet {
+
     private boolean isAuthenticated(HttpServletRequest req) {
         User u = (User) req.getSession().getAttribute("auth");
         return u != null;
     }
-    protected abstract void doPost(HttpServletRequest req, HttpServletResponse resp,User user) throws ServletException, IOException;
-    protected abstract void doGet(HttpServletRequest req, HttpServletResponse resp,User user) throws ServletException, IOException;
+
+    protected abstract void doPost(HttpServletRequest req, HttpServletResponse resp, User user) throws ServletException, IOException;
+
+    protected abstract void doGet(HttpServletRequest req, HttpServletResponse resp, User user) throws ServletException, IOException;
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         if (isAuthenticated(req)) {
-           //exec , autheticate -->user
             User u = (User) req.getSession().getAttribute("auth");
             doPost(req, resp, u);
         } else {
-            resp.getWriter().println("access denied!");
+            req.getRequestDispatcher("/view/accessDenied.jsp").forward(req, resp);
         }
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         if (isAuthenticated(req)) {
-            //do business
-             User u = (User) req.getSession().getAttribute("auth");
+            User u = (User) req.getSession().getAttribute("auth");
             doGet(req, resp, u);
         } else {
-            resp.getWriter().println("Access denied!");
+            req.getRequestDispatcher("/view/accessDenied.jsp").forward(req, resp);
         }
     }
+
 }
