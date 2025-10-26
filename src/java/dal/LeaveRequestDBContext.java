@@ -21,7 +21,9 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
             """;
             PreparedStatement stm = connection.prepareStatement(sql);
             ResultSet rs = stm.executeQuery();
-            while (rs.next()) list.add(mapResultSet(rs));
+            while (rs.next()) {
+                list.add(mapResultSet(rs));
+            }
         } catch (SQLException ex) {
             Logger.getLogger(LeaveRequestDBContext.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -43,7 +45,9 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
             PreparedStatement stm = connection.prepareStatement(sql);
             stm.setInt(1, eid);
             ResultSet rs = stm.executeQuery();
-            while (rs.next()) list.add(mapResultSet(rs));
+            while (rs.next()) {
+                list.add(mapResultSet(rs));
+            }
         } catch (SQLException ex) {
             Logger.getLogger(LeaveRequestDBContext.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -71,7 +75,9 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
             PreparedStatement stm = connection.prepareStatement(sql);
             stm.setInt(1, managerId);
             ResultSet rs = stm.executeQuery();
-            while (rs.next()) list.add(mapResultSet(rs));
+            while (rs.next()) {
+                list.add(mapResultSet(rs));
+            }
         } catch (SQLException ex) {
             Logger.getLogger(LeaveRequestDBContext.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -118,7 +124,9 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
             PreparedStatement stm = connection.prepareStatement(sql);
             stm.setInt(1, id);
             ResultSet rs = stm.executeQuery();
-            if (rs.next()) return mapResultSet(rs);
+            if (rs.next()) {
+                return mapResultSet(rs);
+            }
         } catch (SQLException ex) {
             Logger.getLogger(LeaveRequestDBContext.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -153,19 +161,18 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
     public void update(LeaveRequest model) {
         try {
             String sql = """
-                UPDATE RequestForLeave
-                SET status = ?, processed_by = ?
-                WHERE rid = ?
-            """;
+                     UPDATE [RequestForLeave]
+                        SET [status] = ?,
+                            [processed_by] = ?
+                      WHERE [rid] = ?
+                     """;
             PreparedStatement stm = connection.prepareStatement(sql);
             stm.setInt(1, model.getStatus());
-
             if (model.getProcessedBy() != null) {
                 stm.setInt(2, model.getProcessedBy().getId());
             } else {
                 stm.setNull(2, Types.INTEGER);
             }
-
             stm.setInt(3, model.getId());
             stm.executeUpdate();
         } catch (SQLException ex) {
@@ -188,4 +195,27 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
             closeConnection();
         }
     }
+
+    public boolean isSuperior(int supervisorId, int employeeId) {
+        try {
+            String sql = """
+            WITH Subordinates AS (
+                SELECT eid FROM Employee WHERE supervisorid = ?
+                UNION ALL
+                SELECT e.eid FROM Employee e
+                INNER JOIN Subordinates s ON e.supervisorid = s.eid
+            )
+            SELECT 1 FROM Subordinates WHERE eid = ?
+        """;
+            PreparedStatement stm = connection.prepareStatement(sql);
+            stm.setInt(1, supervisorId);
+            stm.setInt(2, employeeId);
+            ResultSet rs = stm.executeQuery();
+            return rs.next();
+        } catch (SQLException ex) {
+            Logger.getLogger(LeaveRequestDBContext.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
+    }
+
 }
