@@ -9,9 +9,11 @@ package model;
  * @author sonnt
  */
 public class Employee extends BaseModel {
+
     private String name;
-    private Department dept; 
+    private Department dept;
     private Employee supervisor;
+    private java.sql.Date startedDate;
 
     public String getName() {
         return name;
@@ -36,5 +38,12 @@ public class Employee extends BaseModel {
     public void setSupervisor(Employee supervisor) {
         this.supervisor = supervisor;
     }
-    
+
+    public java.sql.Date getStartedDate() {
+        return startedDate;
+    }
+
+    public void setStartedDate(java.sql.Date startedDate) {
+        this.startedDate = startedDate;
+    }
 }

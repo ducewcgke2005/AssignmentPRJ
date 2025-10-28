@@ -1,7 +1,9 @@
 package dal;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import model.Employee;
@@ -216,6 +218,50 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
             Logger.getLogger(LeaveRequestDBContext.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }
+    }
+
+    public ArrayList<LocalDate> getLeaveDaysByMonth(int empId, int year, int month) {
+        ArrayList<LocalDate> leaveDays = new ArrayList<>();
+        String sql = """
+        SELECT [from], [to]
+        FROM RequestForLeave
+        WHERE created_by = ?
+          AND status = 1
+          AND (
+              (YEAR([from]) = ? AND MONTH([from]) = ?)
+              OR (YEAR([to]) = ? AND MONTH([to]) = ?)
+          )
+    """;
+
+        try (PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setInt(1, empId);
+            stm.setInt(2, year);
+            stm.setInt(3, month);
+            stm.setInt(4, year);
+            stm.setInt(5, month);
+            ResultSet rs = stm.executeQuery();
+
+            while (rs.next()) {
+                Date from = rs.getDate("from");
+                Date to = rs.getDate("to");
+
+                if (from != null && to != null) {
+                    LocalDate start = from.toLocalDate();
+                    LocalDate end = to.toLocalDate();
+
+                    // Lặp qua từng ngày trong khoảng nghỉ
+                    while (!start.isAfter(end)) {
+                        if (start.getYear() == year && start.getMonthValue() == month) {
+                            leaveDays.add(start);
+                        }
+                        start = start.plusDays(1);
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return leaveDays;
     }
 
 }

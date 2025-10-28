@@ -64,6 +64,43 @@ public class EmployeeDBContext extends DBContext<Employee> {
         return null;
     }
 
+    public Employee get2(int eid) {
+        try {
+            String sql = "SELECT eid, ename, startedDate FROM Employee WHERE eid = ?";
+            PreparedStatement stm = connection.prepareStatement(sql);
+            stm.setInt(1, eid);
+            ResultSet rs = stm.executeQuery();
+            if (rs.next()) {
+                Employee e = new Employee();
+                e.setId(rs.getInt("eid"));
+                e.setName(rs.getString("ename"));
+                e.setStartedDate(rs.getDate("startedDate"));
+                return e;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public ArrayList<Employee> getAll() {
+        ArrayList<Employee> list = new ArrayList<>();
+        try {
+            String sql = "SELECT e.eid, e.ename FROM Employee e";
+            PreparedStatement stm = connection.prepareStatement(sql);
+            ResultSet rs = stm.executeQuery();
+            while (rs.next()) {
+                Employee e = new Employee();
+                e.setId(rs.getInt("eid"));
+                e.setName(rs.getString("ename"));
+                list.add(e);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public ArrayList<Employee> getSubordinates(int managerId) {
         ArrayList<Employee> list = new ArrayList<>();
         try {
@@ -120,7 +157,7 @@ public class EmployeeDBContext extends DBContext<Employee> {
             s.setName(rs.getString("supervisor_name"));
             e.setSupervisor(s);
         }
-
+        e.setStartedDate(rs.getDate("starteddate"));
         return e;
     }
 
@@ -131,15 +168,17 @@ public class EmployeeDBContext extends DBContext<Employee> {
             PreparedStatement stm = connection.prepareStatement(sql);
             stm.setString(1, model.getName());
 
-            if (model.getDept() != null)
+            if (model.getDept() != null) {
                 stm.setInt(2, model.getDept().getId());
-            else
+            } else {
                 stm.setNull(2, Types.INTEGER);
+            }
 
-            if (model.getSupervisor() != null)
+            if (model.getSupervisor() != null) {
                 stm.setInt(3, model.getSupervisor().getId());
-            else
+            } else {
                 stm.setNull(3, Types.INTEGER);
+            }
 
             stm.executeUpdate();
         } catch (SQLException ex) {
@@ -156,15 +195,17 @@ public class EmployeeDBContext extends DBContext<Employee> {
             PreparedStatement stm = connection.prepareStatement(sql);
             stm.setString(1, model.getName());
 
-            if (model.getDept() != null)
+            if (model.getDept() != null) {
                 stm.setInt(2, model.getDept().getId());
-            else
+            } else {
                 stm.setNull(2, Types.INTEGER);
+            }
 
-            if (model.getSupervisor() != null)
+            if (model.getSupervisor() != null) {
                 stm.setInt(3, model.getSupervisor().getId());
-            else
+            } else {
                 stm.setNull(3, Types.INTEGER);
+            }
 
             stm.setInt(4, model.getId());
             stm.executeUpdate();
