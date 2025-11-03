@@ -25,7 +25,7 @@ public class HomeController extends BaseRequiredAuthenticationController {
         }
 
         // Xác định dashboard theo role
-        String viewPath = "/view/dashboard/employeedash.jsp"; // mặc định
+        String viewPath = "/view/dashboard.jsp"; // mặc định
 
         for (Role r : roles) {
             String roleName = r.getName();
@@ -34,6 +34,8 @@ public class HomeController extends BaseRequiredAuthenticationController {
                 break;
             } else if (roleName.equalsIgnoreCase("IT PM")) {
                 viewPath = "/view/dashboard/pmdash.jsp";
+            } else if (roleName.equalsIgnoreCase("Employee")){
+                viewPath = "/view/dashboard/employeedash.jsp";
             }
         }
 

@@ -1,9 +1,3 @@
-<%-- 
-    Document   : login
-    Created on : Oct 18, 2025
-    Author     : sonnt
---%>
-
 <%@page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
@@ -71,6 +65,11 @@
         input[type="submit"]:hover {
             background-color: #0056b3;
         }
+        .error-message {
+            color: red;
+            font-weight: 500;
+            margin-top: 15px;
+        }
         .footer {
             margin-top: 20px;
             font-size: 13px;
@@ -91,6 +90,13 @@
 
         <input type="submit" id="btnLogin" value="Login" />
     </form>
+
+    <% 
+        String message = (String) request.getAttribute("message");
+        if (message != null) { 
+    %>
+        <div class="error-message"><%= message %></div>
+    <% } %>
 
     <div class="footer">
         © 2025 Leave Management System
