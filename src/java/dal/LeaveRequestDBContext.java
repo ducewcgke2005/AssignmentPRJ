@@ -33,6 +33,35 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
         }
         return list;
     }
+    
+    public ArrayList<LeaveRequest> listBySupervisor(int supervisorId) {
+    ArrayList<LeaveRequest> list = new ArrayList<>();
+    try {
+        String sql = """
+            SELECT r.*, e.ename AS created_name, p.ename AS processed_name
+            FROM RequestForLeave r
+            INNER JOIN Employee e ON e.eid = r.created_by
+            LEFT JOIN Employee p ON p.eid = r.processed_by
+            WHERE e.did = (
+                SELECT did 
+                FROM Employee 
+                WHERE eid = ?
+            )
+        """;
+        PreparedStatement stm = connection.prepareStatement(sql);
+        stm.setInt(1, supervisorId);
+        ResultSet rs = stm.executeQuery();
+        while (rs.next()) {
+            list.add(mapResultSet(rs));
+        }
+    } catch (SQLException ex) {
+        Logger.getLogger(LeaveRequestDBContext.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+        closeConnection();
+    }
+    return list;
+}
+
 
     public ArrayList<LeaveRequest> getByEmployeeId(int eid) {
         ArrayList<LeaveRequest> list = new ArrayList<>();
