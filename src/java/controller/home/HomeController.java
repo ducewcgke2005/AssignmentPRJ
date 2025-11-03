@@ -34,7 +34,7 @@ public class HomeController extends BaseRequiredAuthenticationController {
                 break;
             } else if (roleName.equalsIgnoreCase("IT PM")) {
                 viewPath = "/view/dashboard/pmdash.jsp";
-            } else if (roleName.equalsIgnoreCase("Employee")){
+            } else if (roleName.equalsIgnoreCase("IT Employee")){
                 viewPath = "/view/dashboard/employeedash.jsp";
             }
         }
