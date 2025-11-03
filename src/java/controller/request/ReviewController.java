@@ -30,7 +30,7 @@ public class ReviewController extends BaseRequiredAuthorizationController {
             ArrayList<LeaveRequest> list;
 
             if (roleName.equalsIgnoreCase("IT Head")) {
-                list = db.list();
+                list = db.listBySupervisor(user.getId());
             } else {
                 list = db.getBySubordinates(user.getEmployee().getId());
             }
