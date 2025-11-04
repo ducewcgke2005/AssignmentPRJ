@@ -31,7 +31,7 @@ public class ViewAgendaController extends BaseRequiredAuthorizationController {
             EmployeeDBContext empDB = new EmployeeDBContext();
 
             if (eid_raw == null || eid_raw.isEmpty()) {
-                ArrayList<Employee> employees = empDB.getAll();
+                ArrayList<Employee> employees = empDB.getEmpByDivision(user.getId());
                 req.setAttribute("employees", employees);
                 req.getRequestDispatcher("/view/division/employee_list.jsp").forward(req, resp);
                 return;

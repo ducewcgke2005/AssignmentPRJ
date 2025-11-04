@@ -190,43 +190,38 @@ public class EmployeeDBContext extends DBContext<Employee> {
 
     @Override
     public void update(Employee model) {
-        try {
-            String sql = "UPDATE Employee SET ename = ?, deptid = ?, supervisorid = ? WHERE eid = ?";
-            PreparedStatement stm = connection.prepareStatement(sql);
-            stm.setString(1, model.getName());
-
-            if (model.getDept() != null) {
-                stm.setInt(2, model.getDept().getId());
-            } else {
-                stm.setNull(2, Types.INTEGER);
-            }
-
-            if (model.getSupervisor() != null) {
-                stm.setInt(3, model.getSupervisor().getId());
-            } else {
-                stm.setNull(3, Types.INTEGER);
-            }
-
-            stm.setInt(4, model.getId());
-            stm.executeUpdate();
-        } catch (SQLException ex) {
-            Logger.getLogger(EmployeeDBContext.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            closeConnection();
-        }
     }
 
     @Override
     public void delete(Employee model) {
-        try {
-            String sql = "DELETE FROM Employee WHERE eid = ?";
-            PreparedStatement stm = connection.prepareStatement(sql);
-            stm.setInt(1, model.getId());
-            stm.executeUpdate();
-        } catch (SQLException ex) {
-            Logger.getLogger(EmployeeDBContext.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            closeConnection();
-        }
     }
+    
+    public ArrayList<Employee> getEmpByDivision(int userId) {
+    ArrayList<Employee> list = new ArrayList<>();
+    try {
+        String sql = """
+            SELECT e2.eid, e2.ename
+            FROM Employee e2
+            WHERE e2.did = (
+                SELECT e1.did
+                FROM Employee e1
+                JOIN Enrollment en ON e1.eid = en.eid
+                WHERE en.uid = ?
+            )
+        """;
+        PreparedStatement stm = connection.prepareStatement(sql);
+        stm.setInt(1, userId);
+        ResultSet rs = stm.executeQuery();
+        while (rs.next()) {
+            Employee e = new Employee();
+            e.setId(rs.getInt("eid"));
+            e.setName(rs.getString("ename"));
+            list.add(e);
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return list;
+}
+
 }
