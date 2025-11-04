@@ -172,7 +172,7 @@
                             <td>${r.reason}</td>
                             <td>
                                 <c:choose>
-                                    <c:when test="${r.status == 0}">Pending</c:when>
+                                    <c:when test="${r.status == 0}">In progress</c:when>
                                     <c:when test="${r.status == 1}">Approved</c:when>
                                     <c:otherwise>Rejected</c:otherwise>
                                 </c:choose>
