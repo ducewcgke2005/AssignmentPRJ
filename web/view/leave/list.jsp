@@ -86,6 +86,30 @@
             td:last-child a:hover {
                 background-color: #217dbb;
             }
+            .pagination {
+                text-align: center; 
+                margin-top: 10px;
+                padding: 15px
+            }
+
+            .pagination a, .pagination .current {
+                padding: 5px 10px;
+                margin: 0 2px;
+                text-decoration: none;
+                border: 1px solid #ccc;
+                color: #333;
+            }
+
+            .pagination a:hover {
+                background-color: #eee;
+            }
+
+            .pagination .current {
+                font-weight: bold;
+                background-color: #333;
+                color: #fff;
+            }
+
         </style>
     </head>
     <body>
@@ -169,6 +193,8 @@
                 </c:otherwise>
             </c:choose>
         </table>
-
+        <div class="pagination">
+            <jsp:include page="/view/pagger/pagger.jsp" />
+        </div>
     </body>
 </html>
