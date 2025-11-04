@@ -1,27 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="java.util.ArrayList" %>
-<%@ page import="model.LeaveRequest" %>
-<%@ page import="model.Employee" %>
-
-<%
-    ArrayList<LeaveRequest> requests = (ArrayList<LeaveRequest>) request.getAttribute("requests");
-    String roleName = (String) request.getAttribute("roleName");
-
-    if (requests == null || requests.isEmpty()) {
-        out.println("<h3 style='color:red;text-align:center;'>No requests found!</h3>");
-    }
-
-    String dashboardLink = "#";
-    if (roleName != null) {
-        if (roleName.equalsIgnoreCase("Employee")) {
-            dashboardLink = request.getContextPath() + "/view/dashboard/employeedash.jsp";
-        } else if (roleName.equalsIgnoreCase("IT PM")) {
-            dashboardLink = request.getContextPath() + "/view/dashboard/pmdash.jsp";
-        } else if (roleName.equalsIgnoreCase("IT Head")) {
-            dashboardLink = request.getContextPath() + "/view/dashboard/head.jsp";
-        }
-    }
-%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <!DOCTYPE html>
 <html>
@@ -82,45 +60,64 @@
     <body>
         <h2>Leave Requests to Review</h2>
 
-        <table>
-            <tr>
-                <th>ID</th>
-                <th>Employee</th>
-                <th>From</th>
-                <th>To</th>
-                <th>Reason</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-            <% if (requests != null && !requests.isEmpty()) { 
-               for (LeaveRequest r : requests) { %>
-            <tr>
-                <td><%= r.getId() %></td>
-                <td><%= r.getCreatedBy().getName() %></td>
-                <td><%= r.getFromDate() %></td>
-                <td><%= r.getToDate() %></td>
-                <td><%= r.getReason() %></td>
-                <td>
-                    <%= (r.getStatus() == 0 ? "Pending" : r.getStatus() == 1 ? "Approved" : "Rejected") %>
-                </td>
-                <!--                <td>
-                                    <a href="<%= request.getContextPath() %>/request/review?id=<%= r.getId() %>">Review</a>
-                                </td>-->
-                <td>
-                    <% if (r.getStatus() == 0) { %>
-                    <a href="<%= request.getContextPath() %>/request/review?id=<%= r.getId() %>">Review</a>
-                    <% } else { %>
-                    <span style="color: gray;">Processed</span>
-                    <% } %>
-                </td>
+        <c:choose>
+            <c:when test="${empty requests}">
+                <h3 style="color:red;text-align:center;">No requests found!</h3>
+            </c:when>
+            <c:otherwise>
+                <table>
+                    <tr>
+                        <th>ID</th>
+                        <th>Employee</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                    <c:forEach var="r" items="${requests}">
+                        <tr>
+                            <td>${r.id}</td>
+                            <td>${r.createdBy.name}</td>
+                            <td>${r.fromDate}</td>
+                            <td>${r.toDate}</td>
+                            <td>${r.reason}</td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${r.status == 0}">Pending</c:when>
+                                    <c:when test="${r.status == 1}">Approved</c:when>
+                                    <c:otherwise>Rejected</c:otherwise>
+                                </c:choose>
+                            </td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${r.status == 0}">
+                                        <a href="${pageContext.request.contextPath}/request/review?id=${r.id}">Review</a>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span style="color: gray;">Processed</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </td>
+                        </tr>
+                    </c:forEach>
+                </table>
+            </c:otherwise>
+        </c:choose>
 
-            </tr>
-            <%   } 
-           } else { %>
-            <tr><td colspan="7">No requests to review.</td></tr>
-            <% } %>
-        </table>
+        <c:set var="dashboardLink" value="#" />
+        <c:choose>
+            <c:when test="${roleName eq 'Employee'}">
+                <c:set var="dashboardLink" value="${pageContext.request.contextPath}/view/dashboard/employeedash.jsp" />
+            </c:when>
+            <c:when test="${roleName eq 'IT PM'}">
+                <c:set var="dashboardLink" value="${pageContext.request.contextPath}/view/dashboard/pmdash.jsp" />
+            </c:when>
+            <c:when test="${roleName eq 'IT Head'}">
+                <c:set var="dashboardLink" value="${pageContext.request.contextPath}/view/dashboard/head.jsp" />
+            </c:when>
+        </c:choose>
 
-        <a href="<%= dashboardLink %>" class="dashboard">🏠 Back to Dashboard</a>
+        <a href="${dashboardLink}" class="dashboard">🏠 Back to Dashboard</a>
     </body>
 </html>
