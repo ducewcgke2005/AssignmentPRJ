@@ -153,6 +153,7 @@
         <table>
             <tr>
                 <th>ID</th>
+                <th>Employee ID</th>
                 <th>Employee</th>
                 <th>From</th>
                 <th>To</th>
@@ -166,6 +167,7 @@
                     <c:forEach var="r" items="${requests}">
                         <tr>
                             <td>${r.id}</td>
+                            <td>${r.createdBy.id}</td>
                             <td>${r.createdBy.name}</td>
                             <td>${r.fromDate}</td>
                             <td>${r.toDate}</td>
@@ -189,7 +191,7 @@
                     </c:forEach>
                 </c:when>
                 <c:otherwise>
-                    <tr><td colspan="7">No requests found.</td></tr>
+                    <tr><td colspan="8">No requests found.</td></tr>
                 </c:otherwise>
             </c:choose>
         </table>
