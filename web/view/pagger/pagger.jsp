@@ -5,7 +5,7 @@
 
 <div class="pagination">
     <c:if test="${currentPage > 1}">
-        <a href="?view=${viewType}&page=${currentPage-1}">&lt;-</a>
+        <a href="?view=${viewType}&page=${currentPage-1}">&#x2B05;</a>
     </c:if>
 
     <c:set var="start" value="${currentPage - 2}" />
@@ -34,7 +34,7 @@
     </c:if>
 
     <c:if test="${currentPage < totalPages}">
-        <a href="?view=${viewType}&page=${currentPage+1}">-&gt;</a>
+        <a href="?view=${viewType}&page=${currentPage+1}">&#x27A1;</a>
     </c:if>
 </div>
 
