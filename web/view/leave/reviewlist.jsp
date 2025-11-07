@@ -91,7 +91,8 @@
                 <table>
                     <tr>
                         <th>ID</th>
-                        <th>Employee</th>
+                        <th>Employee ID</th>
+                        <th>Employee Name</th>
                         <th>From</th>
                         <th>To</th>
                         <th>Reason</th>
@@ -101,13 +102,14 @@
                     <c:forEach var="r" items="${requests}">
                         <tr>
                             <td>${r.id}</td>
+                            <td>${r.createdBy.id}</td>
                             <td>${r.createdBy.name}</td>
                             <td>${r.fromDate}</td>
                             <td>${r.toDate}</td>
                             <td>${r.reason}</td>
                             <td>
                                 <c:choose>
-                                    <c:when test="${r.status == 0}">Pending</c:when>
+                                    <c:when test="${r.status == 0}">In progress</c:when>
                                     <c:when test="${r.status == 1}">Approved</c:when>
                                     <c:otherwise>Rejected</c:otherwise>
                                 </c:choose>

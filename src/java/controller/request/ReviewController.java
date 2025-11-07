@@ -15,6 +15,49 @@ import model.Employee;
 @WebServlet("/request/review")
 public class ReviewController extends BaseRequiredAuthorizationController {
 
+//    @Override
+//    protected void processGet(HttpServletRequest req, HttpServletResponse resp, User user)
+//            throws ServletException, IOException {
+//
+//        String idStr = req.getParameter("id");
+//        LeaveRequestDBContext db = new LeaveRequestDBContext();
+//
+//        String roleName = (user.getRoles() != null && !user.getRoles().isEmpty())
+//                ? user.getRoles().get(0).getName()
+//                : "";
+//
+//        if (idStr == null || idStr.isEmpty()) {
+//            ArrayList<LeaveRequest> list;
+//
+//            if (roleName.equalsIgnoreCase("IT Head")) {
+//                list = db.listBySupervisor(user.getId());
+//            } else {
+//                list = db.getBySubordinates(user.getEmployee().getId());
+//            }
+//            req.setAttribute("roleName", roleName);
+//            req.setAttribute("requests", list);
+//            req.getRequestDispatcher("/view/leave/reviewlist.jsp").forward(req, resp);
+//
+//        } else {
+//            try {
+//                int id = Integer.parseInt(idStr);
+//                LeaveRequest lr = db.get(id);
+//
+//                if (lr == null) {
+//                    req.setAttribute("message", "Khong tim thay don xin nghi nay!");
+//                    req.getRequestDispatcher("/view/error.jsp").forward(req, resp);
+//                    return;
+//                }
+//                req.setAttribute("roleName", roleName);
+//                req.setAttribute("request", lr);
+//                req.getRequestDispatcher("/view/leave/review.jsp").forward(req, resp);
+//
+//            } catch (NumberFormatException e) {
+//                req.setAttribute("message", "ID khong hop le!");
+//                req.getRequestDispatcher("/view/error.jsp").forward(req, resp);
+//            }
+//        }
+//    }
     @Override
     protected void processGet(HttpServletRequest req, HttpServletResponse resp, User user)
             throws ServletException, IOException {
@@ -26,19 +69,46 @@ public class ReviewController extends BaseRequiredAuthorizationController {
                 ? user.getRoles().get(0).getName()
                 : "";
 
+        // Nếu idStr null -> hiển thị danh sách review với phân trang
         if (idStr == null || idStr.isEmpty()) {
+            int page = 1;
+            int pageSize = 10; // số bản ghi mỗi trang
+            String pageParam = req.getParameter("page");
+            if (pageParam != null) {
+                try {
+                    page = Integer.parseInt(pageParam);
+                } catch (NumberFormatException e) {
+                    page = 1;
+                }
+            }
+
             ArrayList<LeaveRequest> list;
+            int totalRecords = 0;
 
             if (roleName.equalsIgnoreCase("IT Head")) {
-                list = db.listBySupervisor(user.getId());
+                list = db.listBySupervisor(user.getEmployee().getId(), page, pageSize);
+                db = new LeaveRequestDBContext();
+                totalRecords = db.countBySupervisor(user.getEmployee().getId());
             } else {
-                list = db.getBySubordinates(user.getEmployee().getId());
+                list = db.getBySubordinates(user.getEmployee().getId(), page, pageSize);
+                db = new LeaveRequestDBContext();
+                totalRecords = db.countBySubordinates(user.getEmployee().getId());
             }
+
+            int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
+
             req.setAttribute("roleName", roleName);
             req.setAttribute("requests", list);
+            req.setAttribute("currentPage", page);
+            req.setAttribute("totalPages", totalPages);
+            req.setAttribute("viewType", "all"); // hoặc tùy bạn đặt tên
+            req.setAttribute("action", "request/review");
+            req.setAttribute("method", "get");
+
             req.getRequestDispatcher("/view/leave/reviewlist.jsp").forward(req, resp);
 
         } else {
+            // Xem chi tiết request
             try {
                 int id = Integer.parseInt(idStr);
                 LeaveRequest lr = db.get(id);
@@ -72,20 +142,14 @@ public class ReviewController extends BaseRequiredAuthorizationController {
 
             if ("approve".equalsIgnoreCase(action)) {
                 lr.setStatus(1);
-                System.out.println(">>> Don xin nghi ID " + id + " duoc duyet.");
             } else if ("reject".equalsIgnoreCase(action)) {
                 lr.setStatus(2);
-                System.out.println(">>> Don xin nghi ID " + id + " bi tu choi.");
             } else {
-                req.setAttribute("message", "Hanh dong khong hop le!");
                 req.getRequestDispatcher("/view/error.jsp").forward(req, resp);
                 return;
             }
-
             LeaveRequestDBContext db = new LeaveRequestDBContext();
             db.update(lr);
-
-            System.out.println(">>> Cap nhat DB thanh cong voi rid = " + id);
             resp.sendRedirect(req.getContextPath() + "/request/review");
 
         } catch (Exception e) {
