@@ -444,4 +444,122 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
         return leaveDays;
     }
 
+    public ArrayList<LeaveRequest> listByName(String ten, int page, int pageSize) {
+        ArrayList<LeaveRequest> list = new ArrayList<>();
+        try {
+            int offset = (page - 1) * pageSize;
+            String sql = """
+            SELECT r.*, e.ename AS created_name, p.ename AS processed_name
+            FROM RequestForLeave r
+            INNER JOIN Employee e ON e.eid = r.created_by
+            LEFT JOIN Employee p ON p.eid = r.processed_by
+            WHERE e.ename LIKE ?
+            ORDER BY r.rid
+            OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+        """;
+            PreparedStatement stm = connection.prepareStatement(sql);
+            stm.setString(1, "%" + ten + "%");
+            stm.setInt(2, offset);
+            stm.setInt(3, pageSize);
+            ResultSet rs = stm.executeQuery();
+            while (rs.next()) {
+                list.add(mapResultSet(rs));
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            closeConnection();
+        }
+        return list;
+    }
+
+    public int countByName(String ten) {
+        try {
+            String sql = """
+            SELECT COUNT(*)
+            FROM RequestForLeave r
+            INNER JOIN Employee e ON e.eid = r.created_by
+            WHERE e.ename LIKE ?
+        """;
+            PreparedStatement stm = connection.prepareStatement(sql);
+            stm.setString(1, "%" + ten + "%");
+            ResultSet rs = stm.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            closeConnection();
+        }
+        return 0;
+    }
+
+    public ArrayList<LeaveRequest> listBySupervisorAndName(int supervisorId, String ten, int page, int pageSize) {
+        ArrayList<LeaveRequest> list = new ArrayList<>();
+        try {
+            int offset = (page - 1) * pageSize;
+            String sql = """
+        WITH Subordinates AS (
+            SELECT eid FROM Employee WHERE eid = ?
+            UNION ALL
+            SELECT e.eid FROM Employee e
+            INNER JOIN Subordinates s ON e.supervisorid = s.eid
+        )
+        SELECT r.*, e.ename AS created_name, p.ename AS processed_name
+        FROM RequestForLeave r
+        INNER JOIN Employee e ON e.eid = r.created_by
+        LEFT JOIN Employee p ON p.eid = r.processed_by
+        WHERE r.created_by IN (SELECT eid FROM Subordinates)
+          AND e.ename LIKE ?
+        ORDER BY r.rid
+        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+        """;
+            PreparedStatement stm = connection.prepareStatement(sql);
+            stm.setInt(1, supervisorId);
+            stm.setString(2, "%" + ten + "%");
+            stm.setInt(3, offset);
+            stm.setInt(4, pageSize);
+            ResultSet rs = stm.executeQuery();
+            while (rs.next()) {
+                list.add(mapResultSet(rs));
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            closeConnection();
+        }
+        return list;
+    }
+
+    public int countBySupervisorAndName(int supervisorId, String ten) {
+        try {
+            String sql = """
+        WITH Subordinates AS (
+            SELECT eid FROM Employee WHERE eid = ?
+            UNION ALL
+            SELECT e.eid FROM Employee e
+            INNER JOIN Subordinates s ON e.supervisorid = s.eid
+        )
+        SELECT COUNT(*)
+        FROM RequestForLeave r
+        INNER JOIN Employee e ON e.eid = r.created_by
+        WHERE r.created_by IN (SELECT eid FROM Subordinates)
+          AND e.ename LIKE ?
+        """;
+            PreparedStatement stm = connection.prepareStatement(sql);
+            stm.setInt(1, supervisorId);
+            stm.setString(2, "%" + ten + "%");
+            ResultSet rs = stm.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            closeConnection();
+        }
+        return 0;
+    }
+
 }

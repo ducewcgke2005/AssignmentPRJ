@@ -39,5 +39,6 @@ public class Role extends BaseModel {
     public void setFeatures(ArrayList<Feature> features) {
         this.features = features;
     }
+
     
 }

@@ -1,0 +1,207 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Leave Requests - Search</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f6f8;
+                color: #333;
+                margin: 0;
+                padding: 40px;
+            }
+            .top-bar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            h2 {
+                color: #2c3e50;
+                margin: 0;
+            }
+            a.back {
+                text-decoration: none;
+                background-color: #3498db;
+                color: white;
+                padding: 8px 14px;
+                border-radius: 6px;
+            }
+            a.back:hover {
+                background-color: #217dbb;
+            }
+            form.search-form {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            input[type="text"] {
+                padding: 8px 10px;
+                border-radius: 6px;
+                border: 1px solid #ccc;
+                width: 250px;
+                font-size: 14px;
+            }
+            button {
+                padding: 8px 14px;
+                border: none;
+                background-color: #3498db;
+                color: white;
+                border-radius: 6px;
+                cursor: pointer;
+            }
+            button:hover {
+                background-color: #217dbb;
+            }
+            table {
+                width: 90%;
+                margin: 0 auto;
+                border-collapse: collapse;
+                background-color: #fff;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+                border-radius: 6px;
+                overflow: hidden;
+            }
+            th, td {
+                padding: 10px 14px;
+                text-align: center;
+                border-bottom: 1px solid #eee;
+            }
+            th {
+                background-color: #2c3e50;
+                color: white;
+                text-transform: uppercase;
+                font-size: 13px;
+            }
+            tr:nth-child(even) {
+                background-color: #f8f9fa;
+            }
+            tr:hover {
+                background-color: #eaf2ff;
+            }
+            .pagination {
+                text-align: center;
+                margin-top: 10px;
+                padding: 15px
+            }
+
+            .pagination a, .pagination .current {
+                padding: 5px 10px;
+                margin: 0 2px;
+                text-decoration: none;
+                border: 1px solid #ccc;
+                color: #333;
+            }
+
+            .pagination a:hover {
+                background-color: #eee;
+            }
+
+            .pagination .current {
+                font-weight: bold;
+                background-color: #333;
+                color: #fff;
+            }
+        </style>
+    </head>
+    <body>
+
+    <c:choose>
+        <c:when test="${empty sessionScope.auth}">
+            <c:redirect url="${pageContext.request.contextPath}/view/auth/login.jsp" />
+        </c:when>
+    </c:choose>
+
+    <c:set var="user" value="${sessionScope.auth}" />
+    <c:set var="roleName" value="${not empty user.roles ? user.roles[0].name : 'Employee'}" />
+
+    <c:set var="dashboardUrl" value="${pageContext.request.contextPath}/view/dashboard/employeedash.jsp" />
+    <c:choose>
+        <c:when test="${roleName eq 'IT Head'}">
+            <c:set var="dashboardUrl" value='${pageContext.request.contextPath}/view/dashboard/head.jsp' />
+        </c:when>
+        <c:when test="${roleName eq 'IT PM' or roleName eq 'Head'}">
+            <c:set var="dashboardUrl" value='${pageContext.request.contextPath}/view/dashboard/pmdash.jsp' />
+        </c:when>
+    </c:choose>
+
+    <div class="top-bar">
+        <h2>Search Leave Requests</h2>
+        <a href="${dashboardUrl}" class="back">← Back to Dashboard</a>
+    </div>
+
+    <form class="search-form" method="get" action="${pageContext.request.contextPath}/request/search">
+        <input type="text" name="name" placeholder="Nhap ten nhan vien" value="${keyword}">
+        <button type="submit">Search</button>
+    </form>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Employee ID</th>
+            <th>Employee</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Processed By</th>
+        </tr>
+
+        <c:choose>
+            <c:when test="${not empty requests}">
+                <c:forEach var="r" items="${requests}">
+                    <tr>
+                        <td>${r.id}</td>
+                        <td>${r.createdBy.id}</td>
+                        <td>${r.createdBy.name}</td>
+                        <td>${r.fromDate}</td>
+                        <td>${r.toDate}</td>
+                        <td>${r.reason}</td>
+                        <td>
+                    <c:choose>
+                        <c:when test="${r.status == 0}">In progress</c:when>
+                        <c:when test="${r.status == 1}">Approved</c:when>
+                        <c:otherwise>Rejected</c:otherwise>
+                    </c:choose>
+                    </td>
+                    <td>
+                    <c:choose>
+                        <c:when test="${not empty r.processedBy}">
+                            ${r.processedBy.name}
+                        </c:when>
+                        <c:otherwise>-</c:otherwise>
+                    </c:choose>
+                    </td>
+                    </tr>
+                </c:forEach>
+            </c:when>
+            <c:otherwise>
+                <tr><td colspan="8">No requests found for name "<b>${keyword}</b>".</td></tr>
+            </c:otherwise>
+        </c:choose>
+    </table>
+
+    <div class="pagination">
+        <c:if test="${totalPages > 1}">
+            <c:forEach var="i" begin="1" end="${totalPages}">
+                <c:choose>
+                    <c:when test="${i == page}">
+                        <span class="current">${i}</span>
+                    </c:when>
+                    <c:otherwise>
+                        <a href="${pageContext.request.contextPath}/request/search?name=${keyword}&page=${i}">${i}</a>
+                    </c:otherwise>
+                </c:choose>
+            </c:forEach>
+        </c:if>
+    </div>
+
+    <div style="text-align:center; margin-top:10px;">
+        <a href="${pageContext.request.contextPath}/request/list" class="back">← Back to All Requests</a>
+    </div>
+
+</body>
+</html>

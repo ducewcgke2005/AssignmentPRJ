@@ -87,7 +87,7 @@
                 background-color: #217dbb;
             }
             .pagination {
-                text-align: center; 
+                text-align: center;
                 margin-top: 10px;
                 padding: 15px
             }
@@ -108,6 +108,50 @@
                 font-weight: bold;
                 background-color: #333;
                 color: #fff;
+            }
+
+            form[action$="/request/search"] {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 15px;
+                background-color: #f8f9fa;
+                padding: 10px 15px;
+                border-radius: 8px;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+                width: 40%;               /* ✅ Responsive theo % */
+                margin-left: auto;
+                margin-right: auto;
+                min-width: 250px;         /* ✅ Không nhỏ quá */
+                max-width: 600px;         /* ✅ Giới hạn trên */
+            }
+
+            form[action$="/request/search"] input[type="text"] {
+                padding: 8px 10px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                flex: 1;
+                font-size: 14px;
+                transition: border-color 0.2s ease;
+            }
+
+            form[action$="/request/search"] input[type="text"]:focus {
+                border-color: #007bff;
+                outline: none;
+            }
+
+            form[action$="/request/search"] button {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 8px 16px;
+                cursor: pointer;
+                transition: background-color 0.2s ease;
+            }
+
+            form[action$="/request/search"] button:hover {
+                background-color: #0056b3;
             }
 
         </style>
@@ -139,6 +183,12 @@
             <h2>Leave Requests</h2>
             <a href="${dashboardUrl}" class="back">← Back to Dashboard</a>
         </div>
+
+        <form action="${pageContext.request.contextPath}/request/search" method="get">
+            <input type="text" name="name" placeholder="Nhap ten nhan vien">
+            <button type="submit">Search</button>
+        </form>
+
 
         <form method="get" action="${pageContext.request.contextPath}/request/list">
             <label>View:</label>
