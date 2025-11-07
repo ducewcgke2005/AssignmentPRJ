@@ -55,6 +55,29 @@
             .dashboard:hover {
                 background: #218838;
             }
+            .pagination {
+                text-align: center; 
+                margin-top: 10px;
+                padding: 15px
+            }
+
+            .pagination a, .pagination .current {
+                padding: 5px 10px;
+                margin: 0 2px;
+                text-decoration: none;
+                border: 1px solid #ccc;
+                color: #333;
+            }
+
+            .pagination a:hover {
+                background-color: #eee;
+            }
+
+            .pagination .current {
+                font-weight: bold;
+                background-color: #333;
+                color: #fff;
+            }
         </style>
     </head>
     <body>
@@ -119,5 +142,6 @@
         </c:choose>
 
         <a href="${dashboardLink}" class="dashboard">🏠 Back to Dashboard</a>
+        <jsp:include page="/view/pagger/pagger.jsp" />
     </body>
 </html>
