@@ -184,10 +184,14 @@
             <a href="${dashboardUrl}" class="back">← Back to Dashboard</a>
         </div>
 
-        <form action="${pageContext.request.contextPath}/request/search" method="get">
-            <input type="text" name="name" placeholder="Nhap ten nhan vien">
-            <button type="submit">Search</button>
-        </form>
+
+
+        <c:if test="${roleName eq 'IT Head' or roleName eq 'IT PM'}">
+            <form action="${pageContext.request.contextPath}/request/search" method="get">
+                <input type="text" name="name" placeholder="Nhap ten nhan vien">
+                <button type="submit">Search</button>
+            </form>
+        </c:if>
 
 
         <form method="get" action="${pageContext.request.contextPath}/request/list">

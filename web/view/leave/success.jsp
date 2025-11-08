@@ -57,7 +57,6 @@
 <body>
 <div class="box <%= "Submit Failed. Please try again!".equals(request.getAttribute("message")) ? "error" : "" %>">
     <h2><%= request.getAttribute("message") %></h2>
-    <p>Thank you for submitting your leave request.</p>
     <a href="<%= request.getContextPath() %>/home">Back to Dashboard</a>
 </div>
 </body>
