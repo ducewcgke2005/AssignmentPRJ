@@ -103,11 +103,11 @@
 
             /* Trạng thái ngày */
             .working {
-                background-color: #006400;
+                background-color: #92D050;
                 color: #FEFDFB;
             }
             .off {
-                background-color: #ffb3b3;
+                background-color: #FF0000;
                 color: #800000;
             }
             .inactive {
@@ -239,8 +239,8 @@
         </table>
 
         <div class="legend">
-            <span style="background:#006400"></span> Working
-            <span style="background:#ffb3b3"></span> Leave
+            <span style="background:#92D050"></span> Working
+            <span style="background:#FF0000"></span> Leave
             <span style="background:#f0f0f0"></span> Do not have data
         </div>
         <br><br><!-- comment -->
