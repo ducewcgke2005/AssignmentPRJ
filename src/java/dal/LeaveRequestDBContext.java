@@ -122,7 +122,7 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
         }
         return 0;
     }
-    
+
     public ArrayList<LeaveRequest> getByEmployeeId(int eid, int page, int pageSize) {
         ArrayList<LeaveRequest> list = new ArrayList<>();
         int offset = (page - 1) * pageSize;
@@ -503,6 +503,129 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
             ex.printStackTrace();
         } finally {
             closeConnection();
+        }
+        return 0;
+    }
+
+    public ArrayList<LeaveRequest> listBySupervisorInProgress(int supervisorId, int page, int pageSize) {
+        ArrayList<LeaveRequest> list = new ArrayList<>();
+        try {
+            int offset = (page - 1) * pageSize;
+            String sql = """
+        WITH Subordinates AS (
+            SELECT eid FROM Employee WHERE eid = ?   -- lay ca supervisor
+            UNION ALL
+            SELECT e.eid FROM Employee e
+            INNER JOIN Subordinates s ON e.supervisorid = s.eid
+        )
+        SELECT r.*, e.ename AS created_name, p.ename AS processed_name
+        FROM RequestForLeave r
+        INNER JOIN Employee e ON e.eid = r.created_by
+        LEFT JOIN Employee p ON p.eid = r.processed_by
+        WHERE r.created_by IN (SELECT eid FROM Subordinates)
+          AND r.status = 0
+        ORDER BY r.rid DESC
+        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+        """;
+            PreparedStatement stm = connection.prepareStatement(sql);
+            stm.setInt(1, supervisorId);
+            stm.setInt(2, offset);
+            stm.setInt(3, pageSize);
+            ResultSet rs = stm.executeQuery();
+            while (rs.next()) {
+                list.add(mapResultSet(rs));
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            closeConnection();
+        }
+        return list;
+    }
+
+    public int countBySupervisorInProgress(int supervisorId) {
+        try {
+            String sql = """
+        WITH Subordinates AS (
+            SELECT eid FROM Employee WHERE eid = ?   -- lay ca supervisor
+            UNION ALL
+            SELECT e.eid FROM Employee e
+            INNER JOIN Subordinates s ON e.supervisorid = s.eid
+        )
+        SELECT COUNT(*) FROM RequestForLeave
+        WHERE created_by IN (SELECT eid FROM Subordinates)
+          AND status = 0
+        """;
+            PreparedStatement stm = connection.prepareStatement(sql);
+            stm.setInt(1, supervisorId);
+            ResultSet rs = stm.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeConnection();
+        }
+        return 0;
+    }
+
+    public ArrayList<LeaveRequest> getBySubordinatesInProgress(int managerId, int page, int pageSize) {
+        ArrayList<LeaveRequest> list = new ArrayList<>();
+        int offset = (page - 1) * pageSize;
+
+        String sql = """
+    WITH Subordinates AS (
+        SELECT eid FROM Employee WHERE supervisorid = ?
+        UNION ALL
+        SELECT e.eid FROM Employee e
+        INNER JOIN Subordinates s ON e.supervisorid = s.eid
+    )
+    SELECT r.*, e.ename AS created_name, p.ename AS processed_name
+    FROM RequestForLeave r
+    INNER JOIN Employee e ON e.eid = r.created_by
+    LEFT JOIN Employee p ON p.eid = r.processed_by
+    WHERE r.created_by IN (SELECT eid FROM Subordinates)
+      AND r.status = 0
+    ORDER BY r.rid DESC
+    OFFSET %d ROWS FETCH NEXT %d ROWS ONLY
+    """.formatted(offset, pageSize);
+
+        try (PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setInt(1, managerId);
+            try (ResultSet rs = stm.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSet(rs));
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(LeaveRequestDBContext.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return list;
+    }
+
+    public int countBySubordinatesInProgress(int managerId) {
+        String sql = """
+    WITH Subordinates AS (
+        SELECT eid FROM Employee WHERE supervisorid = ?
+        UNION ALL
+        SELECT e.eid FROM Employee e
+        INNER JOIN Subordinates s ON e.supervisorid = s.eid
+    )
+    SELECT COUNT(*) FROM RequestForLeave
+    WHERE created_by IN (SELECT eid FROM Subordinates)
+      AND status = 0
+    """;
+
+        try (PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setInt(1, managerId);
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return 0;
     }

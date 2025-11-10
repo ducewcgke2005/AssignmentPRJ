@@ -86,13 +86,13 @@ public class ReviewController extends BaseRequiredAuthorizationController {
             int totalRecords = 0;
 
             if (roleName.equalsIgnoreCase("IT Head")) {
-                list = db.listBySupervisor(user.getEmployee().getId(), page, pageSize);
+                list = db.listBySupervisorInProgress(user.getEmployee().getId(), page, pageSize);
                 db = new LeaveRequestDBContext();
-                totalRecords = db.countBySupervisor(user.getEmployee().getId());
+                totalRecords = db.countBySupervisorInProgress(user.getEmployee().getId());
             } else {
-                list = db.getBySubordinates(user.getEmployee().getId(), page, pageSize);
+                list = db.getBySubordinatesInProgress(user.getEmployee().getId(), page, pageSize);
                 db = new LeaveRequestDBContext();
-                totalRecords = db.countBySubordinates(user.getEmployee().getId());
+                totalRecords = db.countBySubordinatesInProgress(user.getEmployee().getId());
             }
 
             int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
