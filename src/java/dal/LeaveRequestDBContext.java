@@ -630,4 +630,34 @@ public class LeaveRequestDBContext extends DBContext<LeaveRequest> {
         return 0;
     }
 
+    public ArrayList<LocalDate> getLeaveDaysInRange(int empId, LocalDate fromDate, LocalDate toDate) {
+        ArrayList<LocalDate> leaveDays = new ArrayList<>();
+        String sql = "SELECT [from], [to] FROM RequestForLeave "
+                + "WHERE created_by = ? AND status = 1 AND [to] >= ? AND [from] <= ?";
+
+        try (PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setInt(1, empId);
+            stm.setDate(2, java.sql.Date.valueOf(fromDate));
+            stm.setDate(3, java.sql.Date.valueOf(toDate));
+            ResultSet rs = stm.executeQuery();
+
+            while (rs.next()) {
+                LocalDate start = rs.getDate("from").toLocalDate();
+                LocalDate end = rs.getDate("to").toLocalDate();
+
+                // Giới hạn trong khoảng fromDate → toDate
+                LocalDate d = start.isBefore(fromDate) ? fromDate : start;
+                LocalDate last = end.isAfter(toDate) ? toDate : end;
+
+                while (!d.isAfter(last)) {
+                    leaveDays.add(d);
+                    d = d.plusDays(1);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return leaveDays;
+    }
+
 }
